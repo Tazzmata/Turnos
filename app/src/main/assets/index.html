@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quién trabaja</title>
+<style>
+  :root {
+    --fondo: #f3f5f8; --tarjeta: #ffffff; --texto: #18202c; --suave: #667085; --linea: #e2e6ec;
+    --acento: #1f4e8c; --acento-texto: #ffffff; --aviso: #fff4d6; --aviso-texto: #6f5200; --error: #b42318;
+    --m: #d97706; --m-f: #fef3c7; --t: #2563eb; --t-f: #dbeafe; --n: #5b45b0; --n-f: #e7e2fb; --l: #667085; --l-f: #eef0f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --fondo: #10141b; --tarjeta: #1a202a; --texto: #edf0f5; --suave: #a0a9b8; --linea: #2d3542;
+      --acento: #7eb0f2; --acento-texto: #0e1a2b; --aviso: #3b3012; --aviso-texto: #f4d98a; --error: #ff8a80;
+      --m: #fbbf24; --m-f: #3d2e0b; --t: #7fb0ff; --t-f: #14294d; --n: #b5a4f5; --n-f: #2a2350; --l: #a0a9b8; --l-f: #262d38;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fondo); color: var(--texto); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  #lista { max-width: 720px; margin: 0 auto; padding: 12px 16px 88px; }
+  h1 { font-size: 20px; margin: 4px 0 12px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  .pestanas { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--tarjeta); border-top: 1px solid var(--linea); z-index: 5; }
+  .pestana { flex: 1; min-height: 56px; border: 0; background: none; color: var(--suave); font-size: 14px; font-weight: 600; }
+  .pestana.activa { color: var(--acento); box-shadow: inset 0 3px 0 var(--acento); }
+  .tarjeta { background: var(--tarjeta); border: 1px solid var(--linea); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .aviso { background: var(--aviso); color: var(--aviso-texto); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; font-size: 14px; }
+  .ahora { background: var(--acento); color: var(--acento-texto); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+  .ahora small { display: block; opacity: .85; }
+  .ahora strong { font-size: 20px; }
+  .navegar { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .navegar .titulo { flex: 1; text-align: center; font-weight: 700; }
+  .navegar .titulo::first-letter { text-transform: uppercase; }
+  .tres input { padding: 0 4px; }
+  .btn { min-height: 44px; padding: 0 14px; border: 1px solid var(--linea); border-radius: 10px; background: var(--tarjeta); }
+  .btn.primario { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); font-weight: 700; }
+  .btn.flecha { min-width: 44px; padding: 0; font-size: 20px; }
+  .hoybtn { display: block; margin: -4px auto 12px; }
+  .franja { display: flex; align-items: center; gap: 12px; border-radius: 12px; padding: 14px; margin-bottom: 8px; }
+  .franja .letra { font-size: 13px; font-weight: 700; min-width: 72px; }
+  .franja .nombre { font-size: 20px; font-weight: 700; }
+  .fM { background: var(--m-f); } .fM .letra { color: var(--m); }
+  .fT { background: var(--t-f); } .fT .letra { color: var(--t); }
+  .fN { background: var(--n-f); } .fN .letra { color: var(--n); }
+  .libran { color: var(--suave); font-size: 14px; margin-top: 10px; }
+  .semana, .mes { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+  .semana div { text-align: center; color: var(--suave); font-size: 12px; font-weight: 700; padding-bottom: 4px; }
+  .dia { min-height: 78px; padding: 3px 2px; border: 1px solid var(--linea); border-radius: 8px; background: var(--tarjeta); text-align: center; font-size: 12px; line-height: 1.25; overflow: hidden; }
+  .dia b { display: block; font-size: 14px; }
+  .dia.hoy { border: 2px solid var(--acento); }
+  .dia.mio { background: var(--l-f); }
+  .marca { display: block; white-space: nowrap; overflow: hidden; }
+  .cM { color: var(--m); } .cT { color: var(--t); } .cN { color: var(--n); } .cL { color: var(--l); }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  th, td { padding: 7px 1px; text-align: center; border-bottom: 1px solid var(--linea); font-size: 13px; overflow: hidden; }
+  th.fecha, td.fecha { width: 25%; text-align: left; white-space: nowrap; padding-left: 2px; }
+  tr.hoy td { font-weight: 700; }
+  .celda { display: inline-block; width: 26px; line-height: 26px; border-radius: 6px; font-weight: 700; }
+  .bM { background: var(--m-f); color: var(--m); } .bT { background: var(--t-f); color: var(--t); }
+  .bN { background: var(--n-f); color: var(--n); } .bL { color: var(--suave); }
+  label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  input, select { width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid var(--linea); border-radius: 10px; background: var(--fondo); }
+  .campo { margin-bottom: 12px; }
+  .ayuda { color: var(--suave); font-size: 13px; margin: 4px 0 0; }
+  .filaTurno { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-bottom: 8px; }
+  .tres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+  .acciones .btn { flex: 1 1 150px; }
+  .ok { color: var(--acento); font-size: 14px; margin-top: 8px; font-weight: 600; }
+  .mal { color: var(--error); font-size: 14px; margin-top: 8px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="lista">
+  <h1>Quién trabaja</h1>
+  <main id="vista"><p>Cargando…</p></main>
+  <nav class="pestanas">
+    <button class="pestana" data-accion="vista" data-valor="hoy">Día</button>
+    <button class="pestana" data-accion="vista" data-valor="mes">Mes</button>
+    <button class="pestana" data-accion="vista" data-valor="cuadrante">Cuadrante</button>
+    <button class="pestana" data-accion="vista" data-valor="ajustes">Ajustes</button>
+  </nav>
+</div>
+
+<script>
+(function () {
+  function crear() {
+    var ok = function () {};
+    var ko = function () {};
+    var r = {
+      withSuccessHandler: function (f) { ok = f; return r; },
+      withFailureHandler: function (f) { ko = f; return r; },
+      getConfig: function () {
+        setTimeout(function () { ok(JSON.parse(window.Android.getConfig())); }, 0);
+      },
+      saveConfig: function (c) {
+        setTimeout(function () {
+          var x = JSON.parse(window.Android.saveConfig(JSON.stringify(c)));
+          if (x.error) { ko({ message: x.error }); } else { ok(x); }
+        }, 0);
+      }
+    };
+    return r;
+  }
+  window.google = { script: {} };
+  Object.defineProperty(window.google.script, 'run', { get: crear });
+})();
+</script>
+<script>
+window.onload = function () {
+  var MS_DIA = 86400000;
+  var NOMBRES = { M: 'Mañana', T: 'Tarde', N: 'Noche', L: 'Libre' };
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  var cfg = null;
+  var guardada = null;
+  var vista = 'hoy';
+  var diaActual = hoyNum();
+  var mesVista = null;
+  var miTurno = leerMiTurno();
+  var mensaje = null;
+
+  var raiz = document.getElementById('lista');
+  var zona = document.getElementById('vista');
+
+  function hoyNum() {
+    var d = new Date();
+    return Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / MS_DIA);
+  }
+  function aNum(texto) {
+    var p = texto.split('-');
+    return Math.floor(Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])) / MS_DIA);
+  }
+  function fechaDe(n) { return new Date(n * MS_DIA); }
+  function formatear(n, opciones) {
+    opciones.timeZone = 'UTC';
+    return fechaDe(n).toLocaleDateString('es-ES', opciones);
+  }
+  function modulo(a, b) { return ((a % b) + b) % b; }
+  function letra(i, n) {
+    var pos = modulo(cfg.dias[i] + n - aNum(cfg.ref), cfg.patron.length);
+    return cfg.patron.charAt(pos);
+  }
+  function quienes(n, l) {
+    var r = [];
+    for (var i = 0; i < cfg.turnos.length; i++) {
+      if (letra(i, n) === l) { r.push(i); }
+    }
+    return r;
+  }
+  function nombres(lista) {
+    if (!lista.length) { return 'Sin asignar'; }
+    var textos = lista.map(function (i) { return esc(cfg.turnos[i]); });
+    var ultimo = textos.pop();
+    return textos.length ? textos.join(', ') + ' y ' + ultimo : ultimo;
+  }
+  function corto(i) {
+    var trozos = cfg.turnos[i].split(/\s+/);
+    return esc(trozos[trozos.length - 1].substring(0, 3));
+  }
+  function esc(t) {
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function minutos(h) {
+    var p = h.split(':');
+    return Number(p[0]) * 60 + Number(p[1]);
+  }
+  function franjaActual() {
+    var d = new Date();
+    var ahora = d.getHours() * 60 + d.getMinutes();
+    var hoy = hoyNum();
+    if (ahora >= minutos(cfg.horas.N)) { return { n: hoy, l: 'N', ayer: false }; }
+    if (ahora >= minutos(cfg.horas.T)) { return { n: hoy, l: 'T', ayer: false }; }
+    if (ahora >= minutos(cfg.horas.M)) { return { n: hoy, l: 'M', ayer: false }; }
+    return { n: hoy - 1, l: 'N', ayer: true };
+  }
+  function leerMiTurno() {
+    return window.Android.getMiTurno();
+  }
+  function guardarMiTurno(v) {
+    miTurno = v;
+    window.Android.setMiTurno(v);
+  }
+
+  function render() {
+    if (!cfg) { return; }
+    var botones = raiz.querySelectorAll('.pestana');
+    for (var i = 0; i < botones.length; i++) {
+      botones[i].className = 'pestana' + (botones[i].getAttribute('data-valor') === vista ? ' activa' : '');
+    }
+    if (vista === 'hoy') { zona.innerHTML = htmlDia(); }
+    if (vista === 'mes') { zona.innerHTML = htmlMes(); }
+    if (vista === 'cuadrante') { zona.innerHTML = htmlCuadrante(); }
+    if (vista === 'ajustes') { zona.innerHTML = htmlAjustes(); }
+  }
+
+  function htmlDia() {
+    var h = '';
+    if (!cfg.guardado) {
+      h += '<div class="aviso">Es una cadencia de ejemplo. Pon la vuestra en Ajustes para que el resultado sea real.</div>';
+    }
+    var f = franjaActual();
+    h += '<div class="ahora"><small>Ahora trabaja · ' + NOMBRES[f.l] + (f.ayer ? ' (entró ayer)' : '') + '</small><strong>' + nombres(quienes(f.n, f.l)) + '</strong></div>';
+    h += '<div class="navegar"><button class="btn flecha" data-accion="dia" data-valor="-1" aria-label="Día anterior">‹</button>';
+    h += '<div class="titulo">' + esc(formatear(diaActual, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</div>';
+    h += '<button class="btn flecha" data-accion="dia" data-valor="1" aria-label="Día siguiente">›</button></div>';
+    if (diaActual !== hoyNum()) {
+      h += '<button class="btn hoybtn" data-accion="irHoy">Volver a hoy</button>';
+    }
+    var orden = ['M', 'T', 'N'];
+    for (var i = 0; i < orden.length; i++) {
+      var l = orden[i];
+      h += '<div class="franja f' + l + '"><div class="letra">' + NOMBRES[l] + '<br>' + esc(cfg.horas[l]) + '</div><div class="nombre">' + nombres(quienes(diaActual, l)) + '</div></div>';
+    }
+    var libres = quienes(diaActual, 'L');
+    h += '<div class="libran">Libran: ' + (libres.length ? nombres(libres) : 'nadie') + '</div>';
+    if (miTurno >= 0 && miTurno < cfg.turnos.length) {
+      h += '<div class="libran">' + esc(cfg.turnos[miTurno]) + ' (el tuyo): <strong class="c' + letra(miTurno, diaActual) + '">' + NOMBRES[letra(miTurno, diaActual)] + '</strong></div>';
+    }
+    return h;
+  }
+
+  function htmlMes() {
+    var anio = mesVista.anio;
+    var mes = mesVista.mes;
+    var primero = Math.floor(Date.UTC(anio, mes, 1) / MS_DIA);
+    var total = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
+    var hueco = (fechaDe(primero).getUTCDay() + 6) % 7;
+    var hoy = hoyNum();
+    var h = '<div class="navegar"><button class="btn flecha" data-accion="mes" data-valor="-1" aria-label="Mes anterior">‹</button>';
+    h += '<div class="titulo">' + MESES[mes] + ' ' + anio + '</div>';
+    h += '<button class="btn flecha" data-accion="mes" data-valor="1" aria-label="Mes siguiente">›</button></div>';
+    h += '<div class="semana"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div><div class="mes">';
+    for (var v = 0; v < hueco; v++) { h += '<div></div>'; }
+    for (var d = 0; d < total; d++) {
+      var n = primero + d;
+      var clases = 'dia' + (n === hoy ? ' hoy' : '');
+      if (miTurno >= 0 && miTurno < cfg.turnos.length && letra(miTurno, n) !== 'L') { clases += ' mio'; }
+      h += '<button class="' + clases + '" data-accion="abrirDia" data-valor="' + n + '"><b>' + (d + 1) + '</b>';
+      h += marcaMes(n, 'M') + marcaMes(n, 'T') + marcaMes(n, 'N') + '</button>';
+    }
+    return h + '</div>';
+  }
+  function marcaMes(n, l) {
+    var q = quienes(n, l).map(corto).join('/');
+    return '<span class="marca c' + l + '">' + l + ' ' + (q || '–') + '</span>';
+  }
+
+  function htmlCuadrante() {
+    var hoy = hoyNum();
+    var h = '<div class="tarjeta"><h2>Próximos 30 días</h2><table><thead><tr><th class="fecha">Día</th>';
+    for (var i = 0; i < cfg.turnos.length; i++) { h += '<th>' + corto(i) + '</th>'; }
+    h += '</tr></thead><tbody>';
+    for (var d = 0; d < 30; d++) {
+      var n = hoy + d;
+      h += '<tr class="' + (d === 0 ? 'hoy' : '') + '"><td class="fecha">' + esc(formatear(n, { weekday: 'short', day: 'numeric', month: 'numeric' })) + '</td>';
+      for (var t = 0; t < cfg.turnos.length; t++) {
+        var l = letra(t, n);
+        h += '<td><span class="celda b' + l + '">' + (l === 'L' ? '·' : l) + '</span></td>';
+      }
+      h += '</tr>';
+    }
+    return h + '</tbody></table></div>';
+  }
+
+  function comprobarCobertura(c) {
+    var falta = 0;
+    var doble = 0;
+    var largo = c.patron.length;
+    ['M', 'T', 'N'].forEach(function (l) {
+      for (var k = 0; k < largo; k++) {
+        var cuenta = 0;
+        for (var i = 0; i < c.turnos.length; i++) {
+          if (c.patron.charAt(modulo(c.dias[i] + k, largo)) === l) { cuenta++; }
+        }
+        if (cuenta === 0) { falta++; }
+        if (cuenta > 1) { doble++; }
+      }
+    });
+    if (!falta && !doble) { return 'Cada mañana, tarde y noche del ciclo queda cubierta por un solo turno.'; }
+    return 'Atención: en el ciclo hay ' + falta + ' franjas sin turno y ' + doble + ' con más de un turno. Revisa los días del ciclo si no es lo esperado.';
+  }
+
+  function htmlAjustes() {
+    var h = '<div class="tarjeta"><h2>Tu turno</h2><div class="campo"><label for="miTurno">Se resalta en el mes y aparece en el widget</label><select id="miTurno"><option value="-1">Ninguno</option>';
+    for (var m = 0; m < cfg.turnos.length; m++) {
+      h += '<option value="' + m + '"' + (m === miTurno ? ' selected' : '') + '>' + esc(cfg.turnos[m]) + '</option>';
+    }
+    h += '</select></div></div><div class="tarjeta"><h2>Cadencia</h2>';
+    h += '<div class="campo"><label for="patron">Ciclo que se repite</label><input id="patron" value="' + esc(cfg.patron) + '" autocapitalize="characters" autocomplete="off"><p class="ayuda">Una letra por día: M mañana, T tarde, N noche, L libre.</p></div>';
+    h += '<div class="campo"><label for="ref">Día de referencia</label><input id="ref" type="date" value="' + esc(cfg.ref) + '"><p class="ayuda">Elige un día del que sepas qué hacía cada turno.</p></div>';
+    h += '<div class="filaTurno"><label>Nombre</label><label>Ese día estaba en</label></div>';
+    for (var i = 0; i < cfg.turnos.length; i++) {
+      h += '<div class="filaTurno"><input id="nombre' + i + '" value="' + esc(cfg.turnos[i]) + '" maxlength="30" aria-label="Nombre del turno ' + (i + 1) + '"><select id="dia' + i + '" aria-label="Día del ciclo del turno ' + (i + 1) + '">';
+      for (var k = 0; k < cfg.patron.length; k++) {
+        h += '<option value="' + k + '"' + (k === cfg.dias[i] ? ' selected' : '') + '>Día ' + (k + 1) + ' · ' + NOMBRES[cfg.patron.charAt(k)] + '</option>';
+      }
+      h += '</select></div>';
+    }
+    h += '<p class="ayuda">' + esc(comprobarCobertura(cfg)) + '</p>';
+    h += '<div class="acciones" style="margin-top:12px"><button class="btn" data-accion="repartir">Repartir turnos por igual</button></div></div>';
+    h += '<div class="tarjeta"><h2>Hora de entrada</h2><div class="tres">';
+    h += '<div><label for="horaM">Mañana</label><input id="horaM" type="time" value="' + esc(cfg.horas.M) + '"></div>';
+    h += '<div><label for="horaT">Tarde</label><input id="horaT" type="time" value="' + esc(cfg.horas.T) + '"></div>';
+    h += '<div><label for="horaN">Noche</label><input id="horaN" type="time" value="' + esc(cfg.horas.N) + '"></div>';
+    h += '</div><p class="ayuda">La noche se asigna al día en que se entra.</p></div>';
+    h += '<button class="btn primario" style="width:100%" data-accion="guardar">Guardar</button>';
+    if (mensaje) { h += '<div class="' + mensaje.clase + '">' + esc(mensaje.texto) + '</div>'; }
+    return h;
+  }
+
+  function valor(id) { return document.getElementById(id).value; }
+
+  function leerFormulario() {
+    var patron = valor('patron').toUpperCase().replace(/\s/g, '');
+    var c = {
+      turnos: [], dias: [], patron: patron, ref: valor('ref'),
+      horas: { M: valor('horaM'), T: valor('horaT'), N: valor('horaN') },
+      guardado: cfg.guardado
+    };
+    for (var i = 0; i < cfg.turnos.length; i++) {
+      c.turnos.push(valor('nombre' + i));
+      c.dias.push(Number(valor('dia' + i)));
+    }
+    return c;
+  }
+
+  function aplicarPatron() {
+    var c = leerFormulario();
+    if (!/^[MTNL]+$/.test(c.patron)) {
+      mensaje = { clase: 'mal', texto: 'La cadencia solo admite las letras M, T, N y L.' };
+      render();
+      return;
+    }
+    c.dias = c.dias.map(function (d) { return d % c.patron.length; });
+    cfg = c;
+    mensaje = null;
+    render();
+  }
+
+  function repartir() {
+    var c = leerFormulario();
+    if (!/^[MTNL]+$/.test(c.patron)) { return aplicarPatron(); }
+    var paso = c.patron.length / c.turnos.length;
+    c.dias = c.turnos.map(function (t, i) { return Math.floor(i * paso); });
+    cfg = c;
+    mensaje = null;
+    render();
+  }
+
+  function guardar() {
+    var c = leerFormulario();
+    mensaje = { clase: 'ok', texto: 'Guardando…' };
+    render();
+    google.script.run
+      .withSuccessHandler(function (r) {
+        cfg = r;
+        guardada = r;
+        mensaje = { clase: 'ok', texto: 'Guardado.' };
+        render();
+      })
+      .withFailureHandler(function (e) {
+        cfg = c;
+        mensaje = { clase: 'mal', texto: e.message };
+        render();
+      })
+      .saveConfig(c);
+  }
+
+  raiz.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-accion]');
+    if (!b || !cfg) { return; }
+    var accion = b.getAttribute('data-accion');
+    var v = b.getAttribute('data-valor');
+    if (accion === 'vista') { vista = v; mensaje = null; cfg = guardada; }
+    if (accion === 'dia') { diaActual += Number(v); }
+    if (accion === 'irHoy') { diaActual = hoyNum(); }
+    if (accion === 'abrirDia') { diaActual = Number(v); vista = 'hoy'; }
+    if (accion === 'mes') {
+      var f = new Date(Date.UTC(mesVista.anio, mesVista.mes + Number(v), 1));
+      mesVista = { anio: f.getUTCFullYear(), mes: f.getUTCMonth() };
+    }
+    if (accion === 'repartir') { return repartir(); }
+    if (accion === 'guardar') { return guardar(); }
+    render();
+  });
+
+  raiz.addEventListener('change', function (e) {
+    if (e.target.id === 'miTurno') { guardarMiTurno(Number(e.target.value)); }
+    if (e.target.id === 'patron') { aplicarPatron(); }
+  });
+
+  var hoyInicio = fechaDe(hoyNum());
+  mesVista = { anio: hoyInicio.getUTCFullYear(), mes: hoyInicio.getUTCMonth() };
+
+  google.script.run
+    .withSuccessHandler(function (r) { cfg = r; guardada = r; render(); })
+    .withFailureHandler(function (e) { zona.innerHTML = '<div class="mal">' + esc(e.message) + '</div>'; })
+    .getConfig();
+
+  setInterval(function () { if (vista === 'hoy') { render(); } }, 60000);
+};
+</script>
+</body>
+</html>

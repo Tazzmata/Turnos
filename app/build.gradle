@@ -1,0 +1,42 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "es.ruben.quientrabaja"
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "es.ruben.quientrabaja"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    signingConfigs {
+        propia {
+            storeFile file("quientrabaja.keystore")
+            storePassword "quientrabaja"
+            keyAlias "quientrabaja"
+            keyPassword "quientrabaja"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.propia
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="fondo">#FFFFFF</color>
+    <color name="texto">#18202C</color>
+    <color name="suave">#667085</color>
+    <color name="acento">#1F4E8C</color>
+    <color name="aviso">#8A6500</color>
+    <color name="m_fondo">#FEF3C7</color>
+    <color name="m_texto">#B45309</color>
+    <color name="t_fondo">#DBEAFE</color>
+    <color name="t_texto">#2563EB</color>
+    <color name="n_fondo">#E7E2FB</color>
+    <color name="n_texto">#5B45B0</color>
+    <color name="icono_fondo">#1F4E8C</color>
+</resources>
