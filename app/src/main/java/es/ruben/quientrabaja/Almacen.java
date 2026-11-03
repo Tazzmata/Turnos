@@ -64,7 +64,40 @@ final class Almacen {
         }
         JSONObject h = o.getJSONObject("horas");
         return Turnos.validar(nombres, o.getString("patron"), o.getString("ref"), dias,
-                h.getString("M"), h.getString("T"), h.getString("N"));
+                h.getString("M"), h.getString("T"), h.getString("N"), coordDesdeJson(o.optJSONObject("coord")));
+    }
+
+    private static Turnos.Coord coordDesdeJson(JSONObject c) throws JSONException {
+        if (c == null) {
+            return Turnos.coordPorDefecto();
+        }
+        JSONArray jn = c.getJSONArray("nombres");
+        JSONArray jd = c.getJSONArray("dias");
+        String[] nombres = new String[jn.length()];
+        for (int i = 0; i < nombres.length; i++) {
+            nombres[i] = jn.getString(i);
+        }
+        int[] dias = new int[jd.length()];
+        for (int i = 0; i < dias.length; i++) {
+            dias[i] = jd.getInt(i);
+        }
+        return Turnos.validarCoord(nombres, dias, c.getString("ref"), c.getString("entrada"), c.getString("salida"));
+    }
+
+    private static JSONObject coordAJson(Turnos.Coord c) throws JSONException {
+        JSONArray jn = new JSONArray();
+        JSONArray jd = new JSONArray();
+        for (int i = 0; i < c.nombres.length; i++) {
+            jn.put(c.nombres[i]);
+            jd.put(c.dias[i]);
+        }
+        JSONObject o = new JSONObject();
+        o.put("nombres", jn);
+        o.put("dias", jd);
+        o.put("ref", c.ref);
+        o.put("entrada", c.entrada);
+        o.put("salida", c.salida);
+        return o;
     }
 
     static JSONObject aJson(Turnos t, boolean guardado) throws JSONException {
@@ -84,6 +117,7 @@ final class Almacen {
         o.put("patron", t.patron);
         o.put("ref", t.ref);
         o.put("horas", h);
+        o.put("coord", coordAJson(t.coord));
         o.put("guardado", guardado);
         return o;
     }

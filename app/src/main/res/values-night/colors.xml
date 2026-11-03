@@ -11,4 +11,6 @@
     <color name="t_texto">#7FB0FF</color>
     <color name="n_fondo">#2A2350</color>
     <color name="n_texto">#B5A4F5</color>
+    <color name="c_fondo">#123F3A</color>
+    <color name="c_texto">#5EEAD4</color>
 </resources>

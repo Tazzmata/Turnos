@@ -78,6 +78,11 @@ public class TurnosWidget extends AppWidgetProvider {
         fila(v, t, hoy, 'T', activa, R.id.etiquetaT, R.id.txtT);
         fila(v, t, hoy, 'N', activa, R.id.etiquetaN, R.id.txtN);
 
+        Turnos.Servicio s = t.coord.actual(hoy, minutos);
+        v.setTextViewText(R.id.etiquetaC, s.activo ? "▶ Coord." : "Coord.");
+        v.setTextViewText(R.id.txtC, t.coord.listaNombres(t.coord.quienes(s.dia))
+                + (s.activo ? " (hasta " + t.coord.salida + ")" : " (desde " + t.coord.entrada + ")"));
+
         v.setTextViewText(R.id.txtLibran, "Libran: " + t.listaNombres(t.quienes(hoy, 'L'), "nadie"));
 
         int mio = Almacen.miTurno(c);

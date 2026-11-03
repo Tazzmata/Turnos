@@ -8,13 +8,13 @@
   :root {
     --fondo: #f3f5f8; --tarjeta: #ffffff; --texto: #18202c; --suave: #667085; --linea: #e2e6ec;
     --acento: #1f4e8c; --acento-texto: #ffffff; --aviso: #fff4d6; --aviso-texto: #6f5200; --error: #b42318;
-    --m: #d97706; --m-f: #fef3c7; --t: #2563eb; --t-f: #dbeafe; --n: #5b45b0; --n-f: #e7e2fb; --l: #667085; --l-f: #eef0f4;
+    --m: #d97706; --m-f: #fef3c7; --t: #2563eb; --t-f: #dbeafe; --n: #5b45b0; --n-f: #e7e2fb; --l: #667085; --l-f: #eef0f4; --c: #0f766e; --c-f: #ccfbf1;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --fondo: #10141b; --tarjeta: #1a202a; --texto: #edf0f5; --suave: #a0a9b8; --linea: #2d3542;
       --acento: #7eb0f2; --acento-texto: #0e1a2b; --aviso: #3b3012; --aviso-texto: #f4d98a; --error: #ff8a80;
-      --m: #fbbf24; --m-f: #3d2e0b; --t: #7fb0ff; --t-f: #14294d; --n: #b5a4f5; --n-f: #2a2350; --l: #a0a9b8; --l-f: #262d38;
+      --m: #fbbf24; --m-f: #3d2e0b; --t: #7fb0ff; --t-f: #14294d; --n: #b5a4f5; --n-f: #2a2350; --l: #a0a9b8; --l-f: #262d38; --c: #5eead4; --c-f: #123f3a;
     }
   }
   * { box-sizing: border-box; }
@@ -46,22 +46,26 @@
   .fM { background: var(--m-f); } .fM .letra { color: var(--m); }
   .fT { background: var(--t-f); } .fT .letra { color: var(--t); }
   .fN { background: var(--n-f); } .fN .letra { color: var(--n); }
+  .fC { background: var(--c-f); } .fC .letra { color: var(--c); }
+  .ahoraCoord { background: var(--c-f); color: var(--texto); }
+  .filaCoord { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px; gap: 8px; margin-bottom: 8px; }
   .libran { color: var(--suave); font-size: 14px; margin-top: 10px; }
   .semana, .mes { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
   .semana div { text-align: center; color: var(--suave); font-size: 12px; font-weight: 700; padding-bottom: 4px; }
-  .dia { min-height: 78px; padding: 3px 2px; border: 1px solid var(--linea); border-radius: 8px; background: var(--tarjeta); text-align: center; font-size: 12px; line-height: 1.25; overflow: hidden; }
+  .dia { min-height: 94px; padding: 3px 2px; border: 1px solid var(--linea); border-radius: 8px; background: var(--tarjeta); text-align: center; font-size: 12px; line-height: 1.25; overflow: hidden; }
   .dia b { display: block; font-size: 14px; }
   .dia.hoy { border: 2px solid var(--acento); }
   .dia.mio { background: var(--l-f); }
   .marca { display: block; white-space: nowrap; overflow: hidden; }
-  .cM { color: var(--m); } .cT { color: var(--t); } .cN { color: var(--n); } .cL { color: var(--l); }
+  .cM { color: var(--m); } .cT { color: var(--t); } .cN { color: var(--n); } .cL { color: var(--l); } .cC { color: var(--c); }
   table { width: 100%; border-collapse: collapse; table-layout: fixed; }
   th, td { padding: 7px 1px; text-align: center; border-bottom: 1px solid var(--linea); font-size: 13px; overflow: hidden; }
-  th.fecha, td.fecha { width: 25%; text-align: left; white-space: nowrap; padding-left: 2px; }
+  th.fecha, td.fecha { width: 23%; text-align: left; white-space: nowrap; padding-left: 2px; }
   tr.hoy td { font-weight: 700; }
   .celda { display: inline-block; width: 26px; line-height: 26px; border-radius: 6px; font-weight: 700; }
   .bM { background: var(--m-f); color: var(--m); } .bT { background: var(--t-f); color: var(--t); }
   .bN { background: var(--n-f); color: var(--n); } .bL { color: var(--suave); }
+  .bC { color: var(--c); font-size: 12px; font-weight: 700; }
   label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
   input, select { width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid var(--linea); border-radius: 10px; background: var(--fondo); }
   .campo { margin-bottom: 12px; }
@@ -113,6 +117,8 @@
 <script>
 window.onload = function () {
   var MS_DIA = 86400000;
+  var CICLO_COORD = 5;
+  var MAX_COORD = 10;
   var NOMBRES = { M: 'Mañana', T: 'Tarde', N: 'Noche', L: 'Libre' };
   var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
   var cfg = null;
@@ -161,6 +167,43 @@ window.onload = function () {
     var trozos = cfg.turnos[i].split(/\s+/);
     return esc(trozos[trozos.length - 1].substring(0, 3));
   }
+  function coordTrabaja(i, n) {
+    return modulo(cfg.coord.dias[i] + n - aNum(cfg.coord.ref), CICLO_COORD) === 0;
+  }
+  function coordinadores(n) {
+    var r = [];
+    for (var i = 0; i < cfg.coord.nombres.length; i++) {
+      if (coordTrabaja(i, n)) { r.push(i); }
+    }
+    return r;
+  }
+  function nombresCoord(lista) {
+    if (!lista.length) { return 'Sin coordinador'; }
+    var textos = lista.map(function (i) { return esc(cfg.coord.nombres[i]); });
+    var ultimo = textos.pop();
+    return textos.length ? textos.join(', ') + ' y ' + ultimo : ultimo;
+  }
+  function cortoCoord(lista) {
+    if (!lista.length) { return '–'; }
+    return lista.map(function (i) {
+      var trozos = cfg.coord.nombres[i].split(/\s+/);
+      return esc(trozos[trozos.length - 1].substring(0, 3));
+    }).join('/');
+  }
+  function coordActual() {
+    var d = new Date();
+    var ahora = d.getHours() * 60 + d.getMinutes();
+    var hoy = hoyNum();
+    var entrada = minutos(cfg.coord.entrada);
+    var salida = minutos(cfg.coord.salida);
+    if (entrada > salida) {
+      if (ahora >= entrada) { return { n: hoy, activo: true }; }
+      if (ahora < salida) { return { n: hoy - 1, activo: true }; }
+      return { n: hoy, activo: false };
+    }
+    if (ahora >= entrada && ahora < salida) { return { n: hoy, activo: true }; }
+    return { n: ahora < entrada ? hoy : hoy + 1, activo: false };
+  }
   function esc(t) {
     return String(t).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -206,6 +249,8 @@ window.onload = function () {
     }
     var f = franjaActual();
     h += '<div class="ahora"><small>Ahora trabaja · ' + NOMBRES[f.l] + (f.ayer ? ' (entró ayer)' : '') + '</small><strong>' + nombres(quienes(f.n, f.l)) + '</strong></div>';
+    var cu = coordActual();
+    h += '<div class="ahora ahoraCoord"><small>' + (cu.activo ? 'Coordinador de servicio · hasta las ' + esc(cfg.coord.salida) : 'Próximo coordinador · desde las ' + esc(cfg.coord.entrada)) + '</small><strong>' + nombresCoord(coordinadores(cu.n)) + '</strong></div>';
     h += '<div class="navegar"><button class="btn flecha" data-accion="dia" data-valor="-1" aria-label="Día anterior">‹</button>';
     h += '<div class="titulo">' + esc(formatear(diaActual, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })) + '</div>';
     h += '<button class="btn flecha" data-accion="dia" data-valor="1" aria-label="Día siguiente">›</button></div>';
@@ -217,6 +262,7 @@ window.onload = function () {
       var l = orden[i];
       h += '<div class="franja f' + l + '"><div class="letra">' + NOMBRES[l] + '<br>' + esc(cfg.horas[l]) + '</div><div class="nombre">' + nombres(quienes(diaActual, l)) + '</div></div>';
     }
+    h += '<div class="franja fC"><div class="letra">Coordinador<br>' + esc(cfg.coord.entrada) + '–' + esc(cfg.coord.salida) + '</div><div class="nombre">' + nombresCoord(coordinadores(diaActual)) + '</div></div>';
     var libres = quienes(diaActual, 'L');
     h += '<div class="libran">Libran: ' + (libres.length ? nombres(libres) : 'nadie') + '</div>';
     if (miTurno >= 0 && miTurno < cfg.turnos.length) {
@@ -242,7 +288,7 @@ window.onload = function () {
       var clases = 'dia' + (n === hoy ? ' hoy' : '');
       if (miTurno >= 0 && miTurno < cfg.turnos.length && letra(miTurno, n) !== 'L') { clases += ' mio'; }
       h += '<button class="' + clases + '" data-accion="abrirDia" data-valor="' + n + '"><b>' + (d + 1) + '</b>';
-      h += marcaMes(n, 'M') + marcaMes(n, 'T') + marcaMes(n, 'N') + '</button>';
+      h += marcaMes(n, 'M') + marcaMes(n, 'T') + marcaMes(n, 'N') + '<span class="marca cC">C ' + cortoCoord(coordinadores(n)) + '</span></button>';
     }
     return h + '</div>';
   }
@@ -255,7 +301,7 @@ window.onload = function () {
     var hoy = hoyNum();
     var h = '<div class="tarjeta"><h2>Próximos 30 días</h2><table><thead><tr><th class="fecha">Día</th>';
     for (var i = 0; i < cfg.turnos.length; i++) { h += '<th>' + corto(i) + '</th>'; }
-    h += '</tr></thead><tbody>';
+    h += '<th class="cC">C</th></tr></thead><tbody>';
     for (var d = 0; d < 30; d++) {
       var n = hoy + d;
       h += '<tr class="' + (d === 0 ? 'hoy' : '') + '"><td class="fecha">' + esc(formatear(n, { weekday: 'short', day: 'numeric', month: 'numeric' })) + '</td>';
@@ -263,6 +309,7 @@ window.onload = function () {
         var l = letra(t, n);
         h += '<td><span class="celda b' + l + '">' + (l === 'L' ? '·' : l) + '</span></td>';
       }
+      h += '<td class="bC">' + cortoCoord(coordinadores(n)) + '</td>';
       h += '</tr>';
     }
     return h + '</tbody></table></div>';
@@ -284,6 +331,44 @@ window.onload = function () {
     });
     if (!falta && !doble) { return 'Cada mañana, tarde y noche del ciclo queda cubierta por un solo turno.'; }
     return 'Atención: en el ciclo hay ' + falta + ' franjas sin turno y ' + doble + ' con más de un turno. Revisa los días del ciclo si no es lo esperado.';
+  }
+
+  function textoCoberturaCoord(c) {
+    var vistos = {};
+    var dobles = false;
+    for (var i = 0; i < c.dias.length; i++) {
+      if (vistos[c.dias[i]]) { dobles = true; }
+      vistos[c.dias[i]] = true;
+    }
+    var faltan = CICLO_COORD - Object.keys(vistos).length;
+    if (!faltan && !dobles) { return 'Cada día del ciclo tiene un solo coordinador.'; }
+    var parte = faltan === 1 ? '1 día de cada ' + CICLO_COORD + ' queda sin coordinador' : faltan + ' días de cada ' + CICLO_COORD + ' quedan sin coordinador';
+    if (!faltan) { return 'Atención: algún día tiene más de un coordinador.'; }
+    return 'Atención: ' + parte + (dobles ? ' y algún día tiene más de uno' : '') + '.';
+  }
+
+  function htmlCoordinadores() {
+    var c = cfg.coord;
+    var h = '<div class="tarjeta"><h2>Coordinadores de servicio</h2><p class="ayuda" style="margin:0 0 12px">Trabajan 1 día y libran 4.</p>';
+    h += '<div class="campo"><label for="coordRef">Día de referencia</label><input id="coordRef" type="date" value="' + esc(c.ref) + '"></div>';
+    h += '<div class="filaCoord"><label>Nombre</label><label>Trabajó</label><span></span></div>';
+    for (var i = 0; i < c.nombres.length; i++) {
+      h += '<div class="filaCoord"><input id="coordNombre' + i + '" value="' + esc(c.nombres[i]) + '" maxlength="30" aria-label="Nombre del coordinador ' + (i + 1) + '"><select id="coordDia' + i + '" aria-label="Ciclo del coordinador ' + (i + 1) + '">';
+      for (var k = 0; k < CICLO_COORD; k++) {
+        var texto = k === 0 ? 'Ese día' : 'Hace ' + k + (k === 1 ? ' día' : ' días');
+        h += '<option value="' + k + '"' + (k === c.dias[i] ? ' selected' : '') + '>' + texto + '</option>';
+      }
+      h += '</select><button class="btn flecha" data-accion="quitarCoord" data-valor="' + i + '" aria-label="Quitar coordinador ' + (i + 1) + '">×</button></div>';
+    }
+    h += '<p class="ayuda">' + esc(textoCoberturaCoord(c)) + '</p>';
+    if (c.nombres.length < MAX_COORD) {
+      h += '<div class="acciones" style="margin:12px 0"><button class="btn" data-accion="anadirCoord">Añadir coordinador</button></div>';
+    }
+    h += '<div class="tres" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:12px">';
+    h += '<div><label for="coordEntrada">Entrada</label><input id="coordEntrada" type="time" value="' + esc(c.entrada) + '"></div>';
+    h += '<div><label for="coordSalida">Salida</label><input id="coordSalida" type="time" value="' + esc(c.salida) + '"></div>';
+    h += '</div><p class="ayuda">La salida es del día siguiente si es anterior a la entrada.</p></div>';
+    return h;
   }
 
   function htmlAjustes() {
@@ -309,6 +394,7 @@ window.onload = function () {
     h += '<div><label for="horaT">Tarde</label><input id="horaT" type="time" value="' + esc(cfg.horas.T) + '"></div>';
     h += '<div><label for="horaN">Noche</label><input id="horaN" type="time" value="' + esc(cfg.horas.N) + '"></div>';
     h += '</div><p class="ayuda">La noche se asigna al día en que se entra.</p></div>';
+    h += htmlCoordinadores();
     h += '<button class="btn primario" style="width:100%" data-accion="guardar">Guardar</button>';
     if (mensaje) { h += '<div class="' + mensaje.clase + '">' + esc(mensaje.texto) + '</div>'; }
     return h;
@@ -321,8 +407,16 @@ window.onload = function () {
     var c = {
       turnos: [], dias: [], patron: patron, ref: valor('ref'),
       horas: { M: valor('horaM'), T: valor('horaT'), N: valor('horaN') },
-      guardado: cfg.guardado
+      guardado: cfg.guardado,
+      coord: {
+        nombres: [], dias: [], ref: valor('coordRef'),
+        entrada: valor('coordEntrada'), salida: valor('coordSalida')
+      }
     };
+    for (var k = 0; k < cfg.coord.nombres.length; k++) {
+      c.coord.nombres.push(valor('coordNombre' + k));
+      c.coord.dias.push(Number(valor('coordDia' + k)));
+    }
     for (var i = 0; i < cfg.turnos.length; i++) {
       c.turnos.push(valor('nombre' + i));
       c.dias.push(Number(valor('dia' + i)));
@@ -348,6 +442,33 @@ window.onload = function () {
     if (!/^[MTNL]+$/.test(c.patron)) { return aplicarPatron(); }
     var paso = c.patron.length / c.turnos.length;
     c.dias = c.turnos.map(function (t, i) { return Math.floor(i * paso); });
+    cfg = c;
+    mensaje = null;
+    render();
+  }
+
+  function anadirCoord() {
+    var c = leerFormulario();
+    var usados = {};
+    c.coord.dias.forEach(function (d) { usados[d] = true; });
+    var libre = 0;
+    while (libre < CICLO_COORD - 1 && usados[libre]) { libre++; }
+    c.coord.nombres.push('Coordinador ' + (c.coord.nombres.length + 1));
+    c.coord.dias.push(libre);
+    cfg = c;
+    mensaje = null;
+    render();
+  }
+
+  function quitarCoord(i) {
+    var c = leerFormulario();
+    if (c.coord.nombres.length <= 1) {
+      mensaje = { clase: 'mal', texto: 'Debe quedar al menos un coordinador.' };
+      render();
+      return;
+    }
+    c.coord.nombres.splice(i, 1);
+    c.coord.dias.splice(i, 1);
     cfg = c;
     mensaje = null;
     render();
@@ -386,6 +507,8 @@ window.onload = function () {
       mesVista = { anio: f.getUTCFullYear(), mes: f.getUTCMonth() };
     }
     if (accion === 'repartir') { return repartir(); }
+    if (accion === 'anadirCoord') { return anadirCoord(); }
+    if (accion === 'quitarCoord') { return quitarCoord(Number(v)); }
     if (accion === 'guardar') { return guardar(); }
     render();
   });

@@ -12,4 +12,6 @@
     <color name="n_fondo">#E7E2FB</color>
     <color name="n_texto">#5B45B0</color>
     <color name="icono_fondo">#1F4E8C</color>
+    <color name="c_fondo">#CCFBF1</color>
+    <color name="c_texto">#0F766E</color>
 </resources>
